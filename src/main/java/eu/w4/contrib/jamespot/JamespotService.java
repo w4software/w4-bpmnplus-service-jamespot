@@ -15,6 +15,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -118,7 +119,7 @@ public class JamespotService extends AbstractService
       signature.append(hex);
     }
     message.put("d", timestamp);
-    message.put("k", signature.toString().toUpperCase());
+    message.put("k", signature.toString().toLowerCase());
   }
 
   @SuppressWarnings("unchecked")
@@ -141,7 +142,12 @@ public class JamespotService extends AbstractService
     sign(postParameters);
 
     final WebTarget webTarget = _restClient.target(_url + "/api/api.php");
-    final Entity<?> entity = Entity.entity(postParameters, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+    final Form form = new Form();
+    for (final Entry<String, String> parameter : postParameters.entrySet())
+    {
+      form.param(parameter.getKey(), parameter.getValue());
+    }
+    final Entity<?> entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
     final Response response = webTarget.request().post(entity);
     Map<String, Object> result = response.readEntity(Map.class);
     Map<String, Object> returnCodeMap = (Map<String, Object>) result.get("RC");
